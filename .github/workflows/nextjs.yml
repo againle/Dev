@@ -1,0 +1,53 @@
+name: Deploy Next.js Frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]  # Trigger on pushes to main/master branches
+
+env:
+  NODE_VERSION: 20.x  # Recommended Node.js version for Next.js
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to push to gh-pages branch
+      pages: write     # Needed to deploy to GitHub Pages
+      id-token: write  # Needed for GitHub Pages deployment
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      # For Next.js static export (if using output: 'export')
+      - name: Export project (if needed)
+        if: contains(env.PACKAGE_JSON, '"export"')
+        run: npm run export
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # For standard Next.js build (not static export)
+          path: './out'  # Change to './.next' if not using static export
+          
+          # For static export (if using output: 'export' in next.config.js)
+          # path: './out'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
