@@ -2,18 +2,19 @@ name: Deploy Next.js Frontend to GitHub Pages
 
 on:
   push:
-    branches: [main, master]  # Trigger on pushes to main/master branches
+    branches: [main, master]
 
 env:
-  NODE_VERSION: 20.x  # Recommended Node.js version for Next.js
+  NODE_VERSION: 20.x
+  PROJECT_DIR: 'choopy/frontend'  # Define your project directory here
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Needed to push to gh-pages branch
-      pages: write     # Needed to deploy to GitHub Pages
-      id-token: write  # Needed for GitHub Pages deployment
+      contents: write
+      pages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -24,17 +25,20 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.PROJECT_DIR }}/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ${{ env.PROJECT_DIR }}
 
       - name: Build project
         run: npm run build
+        working-directory: ${{ env.PROJECT_DIR }}
 
-      # For Next.js static export (if using output: 'export')
       - name: Export project (if needed)
         if: contains(env.PACKAGE_JSON, '"export"')
         run: npm run export
+        working-directory: ${{ env.PROJECT_DIR }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -42,12 +46,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # For standard Next.js build (not static export)
-          path: './out'  # Change to './.next/static' if not using static export
-          
-          # For static export (if using output: 'export' in next.config.js)
-          # path: './out'
+          path: ${{ env.PROJECT_DIR }}/out  # For static export
+          # path: ${{ env.PROJECT_DIR }}/.next/static  # For non-static build
 
       - name: Deploy to GitHub Pages
-        id: deployment
         uses: actions/deploy-pages@v4
