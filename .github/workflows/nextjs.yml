@@ -51,7 +51,7 @@ jobs:
       - name: Build with Next.js
         run: npm run build
       - name: Upload frontend artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./frontend/out
           name: frontend-artifact
@@ -76,10 +76,11 @@ jobs:
         run: |
           python -c "from app import db; db.create_all()"
       - name: Upload backend artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backend-artifact
           path: ./backend/
+          retention-days: 1
 
   # Deploy to production
   deploy:
@@ -90,13 +91,13 @@ jobs:
     needs: [build-frontend, build-backend]
     steps:
       - name: Download frontend artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: frontend-artifact
           path: ./frontend-dist
           
       - name: Download backend artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: backend-artifact
           path: ./backend-dist
